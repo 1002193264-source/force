@@ -1,0 +1,5 @@
+{
+  "name": "Interactive Physics Learning Hub",
+  "description": "An interactive web application designed for active student engagement in physics education. It features AI-powered quizzes, a collaborative problem solver, and a force diagram visualizer to enhance understanding of physical concepts.",
+  "requestFramePermissions": []
+}
