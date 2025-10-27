@@ -41,34 +41,34 @@ const CollaborativeProblemSolver: React.FC = () => {
   }
 
   return (
-    <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-6 flex flex-col h-full shadow-lg hover:shadow-blue-500/10 transition-shadow duration-300">
+    <div className="bg-white/30 backdrop-blur-md border border-white/40 rounded-2xl p-6 flex flex-col h-full shadow-lg hover:shadow-sky-500/20 transition-shadow duration-300">
       <div className="flex items-center gap-4 mb-4">
-        <div className="bg-blue-500/10 p-2 rounded-lg"><CollaborateIcon className="w-8 h-8 text-blue-400" /></div>
-        <h2 className="text-2xl font-bold text-blue-400">التعاون وحل المسائل</h2>
+        <div className="bg-sky-900/10 p-2 rounded-lg"><CollaborateIcon className="w-8 h-8 text-sky-800" /></div>
+        <h2 className="text-2xl font-bold text-sky-800">التعاون وحل المسائل</h2>
       </div>
-      <p className="mb-4 text-slate-300">أدخل مسألة فيزيائية لتحصل على تحليل وخطوات حل مفصلة.</p>
+      <p className="mb-4 text-gray-800">أدخل مسألة فيزيائية لتحصل على تحليل وخطوات حل مفصلة.</p>
       <form onSubmit={handleSubmit} className="flex flex-col flex-grow">
         <textarea
           value={problem}
           onChange={(e) => setProblem(e.target.value)}
           placeholder="مثال: جسم كتلته 10 كجم على سطح أفقي، أثرت عليه قوة أفقية مقدارها 50 نيوتن. احسب تسارع الجسم إذا كان معامل الاحتكاك 0.2."
-          className="w-full p-3 bg-slate-900 border border-slate-600 rounded-lg mb-4 flex-grow focus:ring-2 focus:ring-blue-500 focus:outline-none transition-shadow"
+          className="w-full p-3 bg-white/50 border border-gray-400 rounded-lg mb-4 flex-grow focus:ring-2 focus:ring-sky-600 focus:outline-none transition-shadow placeholder-gray-600"
           rows={4}
           disabled={isLoading}
         ></textarea>
-        {error && <p className="text-red-400 mb-4">{error}</p>}
+        {error && <p className="text-red-500 mb-4">{error}</p>}
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed"
+          className="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
         >
           {isLoading ? 'جاري الحل...' : 'احصل على المساعدة'}
         </button>
       </form>
       {solution && (
-        <div className="mt-6 p-4 bg-slate-900 rounded-lg border border-slate-700 max-h-80 overflow-y-auto">
-          <h3 className="text-xl font-bold mb-3 text-blue-300">خطوات الحل:</h3>
-          <div className="prose prose-invert prose-p:text-slate-300">{formatSolution(solution)}</div>
+        <div className="mt-6 p-4 bg-black/10 rounded-lg border border-gray-900/20 max-h-80 overflow-y-auto">
+          <h3 className="text-xl font-bold mb-3 text-sky-900">خطوات الحل:</h3>
+          <div className="prose prose-p:text-gray-800">{formatSolution(solution)}</div>
         </div>
       )}
     </div>

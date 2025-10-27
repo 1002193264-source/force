@@ -2,6 +2,8 @@ import React, { useState, useCallback } from 'react';
 import type { QuizQuestion } from '../types';
 import { quizQuestions } from '../data/quizData';
 import { QuizIcon } from './icons/QuizIcon';
+import { StarRating } from './StarRating';
+import { getRatings, saveRating } from '../services/ratingService';
 
 type QuizState = 'idle' | 'loading' | 'active' | 'finished';
 
@@ -13,10 +15,13 @@ const InteractiveQuiz: React.FC = () => {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [quizState, setQuizState] = useState<QuizState>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
+  const [ratings, setRatings] = useState<Record<string, number>>({});
 
   const startQuiz = useCallback(() => {
     setQuizState('loading');
     setError(null);
+    setUserAnswers({});
     
     // Simulate loading for better UX
     setTimeout(() => {
@@ -40,6 +45,7 @@ const InteractiveQuiz: React.FC = () => {
   const handleAnswerSelect = (answer: string) => {
     if (selectedAnswer) return;
 
+    setUserAnswers(prev => ({...prev, [currentQuestionIndex]: answer}));
     setSelectedAnswer(answer);
     const correct = answer === questions[currentQuestionIndex].correctAnswer;
     setIsCorrect(correct);
@@ -53,6 +59,7 @@ const InteractiveQuiz: React.FC = () => {
         setSelectedAnswer(null);
         setIsCorrect(null);
       } else {
+        setRatings(getRatings()); // Load ratings when quiz finishes
         setQuizState('finished');
       }
     }, 1500);
@@ -61,22 +68,29 @@ const InteractiveQuiz: React.FC = () => {
   const resetQuiz = () => {
       setQuizState('idle');
       setQuestions([]);
+      setUserAnswers({});
   }
+
+  const handleRatingChange = (question: string, rating: number) => {
+    const newRatings = { ...ratings, [question]: rating };
+    setRatings(newRatings);
+    saveRating(question, rating);
+  };
 
   const getButtonClass = (option: string) => {
     if (!selectedAnswer) {
-      return 'bg-slate-700 hover:bg-slate-600';
+      return 'bg-white/40 hover:bg-white/60 text-gray-900';
     }
     const isCorrectAnswer = option === questions[currentQuestionIndex].correctAnswer;
     const isSelected = option === selectedAnswer;
 
     if (isCorrectAnswer) {
-      return 'bg-green-500 scale-105';
+      return 'bg-green-600 text-white scale-105';
     }
     if (isSelected && !isCorrect) {
-      return 'bg-red-500';
+      return 'bg-red-600 text-white';
     }
-    return 'bg-slate-700 opacity-50';
+    return 'bg-white/40 opacity-50 text-gray-900';
   };
 
   const renderContent = () => {
@@ -88,9 +102,9 @@ const InteractiveQuiz: React.FC = () => {
         return (
           <div>
             <div className="mb-4 text-center">
-              <p className="text-slate-400">السؤال {currentQuestionIndex + 1} من {questions.length}</p>
-              <div className="w-full bg-slate-700 rounded-full h-2.5 mt-2">
-                <div className="bg-cyan-500 h-2.5 rounded-full" style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}></div>
+              <p className="text-gray-700">السؤال {currentQuestionIndex + 1} من {questions.length}</p>
+              <div className="w-full bg-white/50 rounded-full h-2.5 mt-2">
+                <div className="bg-amber-500 h-2.5 rounded-full" style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}></div>
               </div>
             </div>
             <p className="text-xl font-semibold mb-6 text-center">{currentQuestion.question}</p>
@@ -100,7 +114,7 @@ const InteractiveQuiz: React.FC = () => {
                   key={option}
                   onClick={() => handleAnswerSelect(option)}
                   disabled={!!selectedAnswer}
-                  className={`p-4 rounded-lg text-white font-semibold transition-all duration-300 ${getButtonClass(option)}`}
+                  className={`p-4 rounded-lg font-semibold transition-all duration-300 ${getButtonClass(option)}`}
                 >
                   {option}
                 </button>
@@ -110,12 +124,37 @@ const InteractiveQuiz: React.FC = () => {
         );
       case 'finished':
         return (
-          <div className="text-center">
-            <h3 className="text-2xl font-bold mb-4">اكتمل الاختبار!</h3>
+          <div className="text-center w-full">
+            <h3 className="text-2xl font-bold mb-2">اكتمل الاختبار!</h3>
             <p className="text-xl mb-6">نتيجتك النهائية: {score} من {questions.length}</p>
+            
+            <div className="text-right w-full max-h-[22rem] overflow-y-auto space-y-4 p-4 bg-black/5 rounded-lg border border-gray-900/20 mb-6">
+                <h4 className="text-lg font-bold text-amber-900 mb-2">راجع إجاباتك وقم بتقييم الأسئلة:</h4>
+                {questions.map((q, index) => {
+                    const userAnswer = userAnswers[index];
+                    const isUserCorrect = userAnswer === q.correctAnswer;
+                    return (
+                        <div key={index} className="p-4 bg-white/20 rounded-lg border border-white/30">
+                            <p className="font-semibold mb-2">{index + 1}. {q.question}</p>
+                            <p className={`text-sm ${isUserCorrect ? 'text-green-800' : 'text-red-800'}`}>
+                                إجابتك: {userAnswer || "لم تتم الإجابة"} {isUserCorrect ? ' (صحيحة)' : ' (خاطئة)'}
+                            </p>
+                            {!isUserCorrect && <p className="text-sm text-gray-800">الإجابة الصحيحة: {q.correctAnswer}</p>}
+                            <div className="mt-3 flex items-center justify-between">
+                                <span className="text-sm text-gray-700">تقييمك للسؤال:</span>
+                                <StarRating 
+                                    rating={ratings[q.question] || 0}
+                                    onRate={(newRating) => handleRatingChange(q.question, newRating)}
+                                />
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
             <button
               onClick={resetQuiz}
-              className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+              className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
             >
               إعادة الاختبار
             </button>
@@ -126,10 +165,10 @@ const InteractiveQuiz: React.FC = () => {
         return (
           <div className="text-center">
             <p className="mb-6">اختبر معلوماتك في مفاهيم القوى الفيزيائية من خلال هذا الاختبار القصير والمعد مسبقًا.</p>
-            {error && <p className="text-red-400 mb-4">{error}</p>}
+            {error && <p className="text-red-500 mb-4">{error}</p>}
             <button
               onClick={startQuiz}
-              className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+              className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
             >
               ابدأ الاختبار
             </button>
@@ -139,10 +178,10 @@ const InteractiveQuiz: React.FC = () => {
   };
 
   return (
-    <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-6 flex flex-col h-full shadow-lg hover:shadow-cyan-500/10 transition-shadow duration-300">
+    <div className="bg-white/30 backdrop-blur-md border border-white/40 rounded-2xl p-6 flex flex-col h-full shadow-lg hover:shadow-amber-500/20 transition-shadow duration-300">
       <div className="flex items-center gap-4 mb-4">
-        <div className="bg-cyan-500/10 p-2 rounded-lg"><QuizIcon className="w-8 h-8 text-cyan-400" /></div>
-        <h2 className="text-2xl font-bold text-cyan-400">أسئلة التقييم</h2>
+        <div className="bg-amber-900/10 p-2 rounded-lg"><QuizIcon className="w-8 h-8 text-amber-800" /></div>
+        <h2 className="text-2xl font-bold text-amber-800">أسئلة التقييم</h2>
       </div>
       <div className="flex-grow flex items-center justify-center">
         {renderContent()}
