@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { solveProblemStepByStep } from '../services/geminiService';
 import { CollaborateIcon } from './icons/CollaborateIcon';
+import { exampleProblems } from '../data/exampleProblems';
 
 const CollaborativeProblemSolver: React.FC = () => {
   const [problem, setProblem] = useState('');
@@ -26,6 +27,13 @@ const CollaborativeProblemSolver: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleShowExample = () => {
+    const randomProblem = exampleProblems[Math.floor(Math.random() * exampleProblems.length)];
+    setProblem(randomProblem);
+    setSolution('');
+    setError(null);
   };
 
   const formatSolution = (text: string) => {
@@ -57,13 +65,23 @@ const CollaborativeProblemSolver: React.FC = () => {
           disabled={isLoading}
         ></textarea>
         {error && <p className="text-red-500 mb-4">{error}</p>}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
-        >
-          {isLoading ? 'جاري الحل...' : 'احصل على المساعدة'}
-        </button>
+        <div className="grid grid-cols-2 gap-4">
+            <button
+              type="button"
+              onClick={handleShowExample}
+              disabled={isLoading}
+              className="w-full bg-black/20 hover:bg-black/30 text-gray-900 font-bold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
+            >
+              جرب مثالاً
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
+            >
+              {isLoading ? 'جاري الحل...' : 'احصل على المساعدة'}
+            </button>
+        </div>
       </form>
       {solution && (
         <div className="mt-6 p-4 bg-black/10 rounded-lg border border-gray-900/20 max-h-80 overflow-y-auto">
