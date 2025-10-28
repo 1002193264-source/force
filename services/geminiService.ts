@@ -16,6 +16,19 @@ export const solveProblemStepByStep = async (problem: string): Promise<string> =
     }
 };
 
+export const correctSolution = async (problem: string, userSolution: string): Promise<string> => {
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: `أنت مدرس فيزياء خبير. سيقدم المستخدم مسألة فيزياء وحلًا قام بكتابته. مهمتك هي تصحيح حل الطالب. قم بمراجعة الحل المقدم، وحدد أي أخطاء، وقدم شرحًا واضحًا للأخطاء باللغة العربية. ثم، قدم الحل الصحيح خطوة بخطوة إذا كان حل الطالب غير صحيح. كن لطيفًا ومشجعًا في تقييمك. المسألة هي: "${problem}". حل الطالب هو: "${userSolution}"`,
+        });
+        return response.text;
+    } catch (error) {
+        console.error("Error correcting solution:", error);
+        throw new Error("فشل في تصحيح الحل. الرجاء المحاولة مرة أخرى.");
+    }
+};
+
 
 const forceSchema = {
     type: Type.OBJECT,
